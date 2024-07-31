@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from flask import Flask, send_file, render_template_string
+import os
+
+app = Flask(__name__)
 
 # Загрузка данных
 results = {}
@@ -31,4 +35,35 @@ plt.xticks(index + bar_width * (len(labels) - 1) / 2, categories)
 plt.legend()
 
 plt.tight_layout()
-plt.show()
+
+# Сохранение графика в файл
+output_image = 'results_plot.png'
+plt.savefig(output_image)
+plt.close(fig)
+
+
+@app.route('/')
+def index():
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Training and Inference Time Comparison</title>
+    </head>
+    <body>
+        <h1>Training and Inference Time Comparison</h1>
+        <img src="/plot.png" alt="Training and Inference Time Comparison">
+    </body>
+    </html>
+    ''')
+
+
+@app.route('/plot.png')
+def plot_png():
+    return send_file(output_image, mimetype='image/png')
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
