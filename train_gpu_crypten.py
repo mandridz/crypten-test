@@ -44,19 +44,18 @@ def train_crypten_model(model, trainloader, device):
             inputs_enc = crypten.cryptensor(inputs.to(device))
             labels_plain = labels.to(device).long()
 
-            # Шифруем метки
-            labels_enc = crypten.cryptensor(labels_plain, src=0)
+            # Убедимся, что метки имеют правильный размер
+            assert inputs_enc.size(0) == labels_plain.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels_plain.size()}"
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
 
-            # Проверка формы выходных данных и меток
+            # Проверка формы выходных данных
             assert outputs.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
-            assert labels_enc.size(0) == outputs.size(
-                0), f"Размер меток должен быть [batch_size], но получил {labels_enc.size()}"
 
-            loss = criterion(outputs, labels_enc)
+            loss = criterion(outputs, labels_plain)  # Используем незашифрованные метки
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
