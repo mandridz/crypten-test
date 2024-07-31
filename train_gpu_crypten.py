@@ -29,10 +29,12 @@ class SimpleCrypTenModel(cnn.Module):
 
 model_cryp_gpu = SimpleCrypTenModel()
 
+# Зашифрование модели
+model_cryp_gpu.encrypt()
+
 
 # Обучение
 def train_crypten_model(model, trainloader, device):
-    model.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
@@ -40,9 +42,8 @@ def train_crypten_model(model, trainloader, device):
     for epoch in range(5):
         running_loss = 0.0
         for inputs, labels in trainloader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            inputs_enc = crypten.cryptensor(inputs)
-            labels_enc = crypten.cryptensor(labels)
+            inputs_enc = crypten.cryptensor(inputs.to(device))
+            labels_enc = crypten.cryptensor(labels.to(device))
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
@@ -61,12 +62,10 @@ training_time_cryp_gpu = train_crypten_model(model_cryp_gpu, trainloader, 'cuda'
 
 # Инференс
 def inference_model(model, trainloader, device):
-    model.to(device)
     start_time = time.time()
     with torch.no_grad():
         for inputs, labels in trainloader:
-            inputs = inputs.to(device)
-            inputs_enc = crypten.cryptensor(inputs)
+            inputs_enc = crypten.cryptensor(inputs.to(device))
             outputs = model(inputs_enc)
     end_time = time.time()
 
