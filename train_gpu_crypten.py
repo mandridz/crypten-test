@@ -42,22 +42,25 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs_enc = crypten.cryptensor(inputs.to(device))
-            labels_plain = labels.to(device).long()
+            labels_enc = crypten.cryptensor(labels.to(device).long())
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
 
-            # Отладочные выводы размеров
-            print(f"outputs size: {outputs.size()}")
-            print(f"labels_plain size: {labels_plain.size()}")
+            # Отладочные выводы размеров и типов
+            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
+            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            print(f"labels_enc size: {labels_enc.size()}, type: {type(labels_enc)}")
 
             # Убедимся, что метки имеют правильный размер
             assert outputs.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
-            assert labels_plain.size(0) == outputs.size(
-                0), f"Размер меток должен быть [batch_size], но получил {labels_plain.size()}"
+            assert labels_enc.size(0) == outputs.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels_enc.size()}"
 
-            loss = criterion(outputs, labels_plain)  # Используем незашифрованные метки
+            loss = criterion(outputs, labels_enc)
+            print(f"Loss: {loss.item()}")
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
