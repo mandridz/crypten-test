@@ -67,7 +67,8 @@ def train_crypten_model(model, trainloader, device):
 
             # Вычисление потерь
             loss = criterion(outputs_plain, labels_plain)
-            print(f"Loss: {loss.item()}")
+
+            # print(f"Loss: {loss.item()}")
 
             # Конвертация потерь обратно в зашифрованный тензор
             loss_enc = crypten.cryptensor(loss.item(), src=0)

@@ -51,10 +51,10 @@ def train_crypten_model(model, trainloader, device):
             outputs = model(inputs_enc)
 
             # Отладочные выводы размеров и типов
-            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
-            print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
-            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
-            print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
+            # print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            # print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
+            # print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            # print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
 
             # Убедимся, что метки имеют правильный размер
             assert outputs.size(
@@ -67,7 +67,8 @@ def train_crypten_model(model, trainloader, device):
 
             # Вычисление потерь
             loss = criterion(outputs_plain, labels_plain)
-            print(f"Loss: {loss.item()}")
+
+            # print(f"Loss: {loss.item()}")
 
             # Конвертация потерь обратно в зашифрованный тензор
             loss_enc = crypten.cryptensor(loss.item(), src=0)

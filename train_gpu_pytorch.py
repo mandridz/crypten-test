@@ -12,9 +12,9 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True)
 
 
 # Модель
-class SimpleModel(nn.Module):
+class SimplePyTorchModel(nn.Module):
     def __init__(self):
-        super(SimpleModel, self).__init__()
+        super(SimplePyTorchModel, self).__init__()
         self.linear = nn.Linear(28 * 28, 10)
 
     def forward(self, x):
@@ -22,23 +22,40 @@ class SimpleModel(nn.Module):
         return self.linear(x)
 
 
-model_gpu = SimpleModel()
+model_gpu = SimplePyTorchModel()
+
+# Использование PyTorch CrossEntropyLoss
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model_gpu.parameters(), lr=0.01)
 
 
 # Обучение
-def train_model(model, trainloader, device):
+def train_pytorch_model(model, trainloader, device):
     model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
-
     start_time = time.time()
     for epoch in range(5):
         running_loss = 0.0
         for inputs, labels in trainloader:
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = inputs.to(device), labels.to(device).long()
+
             optimizer.zero_grad()
             outputs = model(inputs)
+
+            # Отладочные выводы размеров и типов
+            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            print(f"inputs size: {inputs.size()}, type: {type(inputs)}")
+            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            print(f"labels size: {labels.size()}, type: {type(labels)}")
+
+            # Убедимся, что метки имеют правильный размер
+            assert outputs.size(
+                1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
+            assert labels.size(0) == outputs.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels.size()}"
+
+            # Вычисление потерь
             loss = criterion(outputs, labels)
+            print(f"Loss: {loss.item()}")
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -48,7 +65,7 @@ def train_model(model, trainloader, device):
     return training_time
 
 
-training_time_gpu = train_model(model_gpu, trainloader, 'cuda')
+training_time_gpu = train_pytorch_model(model_gpu, trainloader, 'cuda')
 
 
 # Инференс
@@ -67,8 +84,8 @@ def inference_model(model, trainloader, device):
 
 inference_time_gpu = inference_model(model_gpu, trainloader, 'cuda')
 
-print(f"GPU Training time: {training_time_gpu} seconds")
-print(f"GPU Inference time: {inference_time_gpu} seconds")
+print(f"PyTorch GPU Training time: {training_time_gpu} seconds")
+print(f"PyTorch GPU Inference time: {inference_time_gpu} seconds")
 
 with open('results_gpu_pytorch.txt', 'w') as f:
     f.write(f"{training_time_gpu},{inference_time_gpu}")
