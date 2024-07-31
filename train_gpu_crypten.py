@@ -1,7 +1,7 @@
 import crypten
-import crypten.nn as cnn
-import crypten.optim as crypten_optim
 import torch
+import torch.nn as nn
+import crypten.optim as crypten_optim
 import torchvision
 import torchvision.transforms as transforms
 import time
@@ -15,10 +15,10 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True)
 
 
 # Модель
-class SimpleCrypTenModel(cnn.Module):
+class SimpleCrypTenModel(crypten.nn.Module):
     def __init__(self):
         super(SimpleCrypTenModel, self).__init__()
-        self.linear = cnn.Linear(28 * 28, 10)
+        self.linear = crypten.nn.Linear(28 * 28, 10)
 
     def forward(self, x):
         x = x.view(-1, 28 * 28)
@@ -31,10 +31,12 @@ model_cryp_gpu = SimpleCrypTenModel()
 model_cryp_gpu.encrypt()
 model_cryp_gpu = model_cryp_gpu.to('cuda')
 
+# Использование PyTorch CrossEntropyLoss
+criterion = nn.CrossEntropyLoss()
+
 
 # Обучение
 def train_crypten_model(model, trainloader, device):
-    criterion = crypten.nn.CrossEntropyLoss()
     optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
     start_time = time.time()
@@ -42,7 +44,7 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs_enc = crypten.cryptensor(inputs.to(device))
-            labels_enc = crypten.cryptensor(labels.to(device).long())
+            labels_plain = labels.to(device).long()
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
@@ -51,15 +53,19 @@ def train_crypten_model(model, trainloader, device):
             print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
             print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
             print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
-            print(f"labels_enc size: {labels_enc.size()}, type: {type(labels_enc)}")
+            print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
 
             # Убедимся, что метки имеют правильный размер
             assert outputs.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
-            assert labels_enc.size(0) == outputs.size(
-                0), f"Размер меток должен быть [batch_size], но получил {labels_enc.size()}"
+            assert labels_plain.size(0) == outputs.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels_plain.size()}"
 
-            loss = criterion(outputs, labels_enc)
+            # Декриптование выходов для использования в PyTorch функции потерь
+            outputs_plain = outputs.get_plain_text()
+
+            # Вычисление потерь
+            loss = criterion(outputs_plain, labels_plain)
             print(f"Loss: {loss.item()}")
             loss.backward()
             optimizer.step()
