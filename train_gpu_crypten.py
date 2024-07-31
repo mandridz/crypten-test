@@ -42,18 +42,21 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs_enc = crypten.cryptensor(inputs.to(device))
-            labels_plain = labels.to(device).long()  # Приведение меток к типу long
+            labels_plain = labels.to(device).long()
+
+            # Шифруем метки
+            labels_enc = crypten.cryptensor(labels_plain, src=0)
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
 
-            # Убедимся, что метки имеют правильный размер
+            # Проверка формы выходных данных и меток
             assert outputs.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
-            assert labels_plain.size(0) == outputs.size(
-                0), f"Размер меток должен быть [batch_size], но получил {labels_plain.size()}"
+            assert labels_enc.size(0) == outputs.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels_enc.size()}"
 
-            loss = criterion(outputs, labels_plain)  # Используем незашифрованные метки
+            loss = criterion(outputs, labels_enc)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
