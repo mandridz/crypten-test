@@ -42,8 +42,7 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs_enc = crypten.cryptensor(inputs.to(device))
-            labels_enc_plain = labels.to(device).long()  # Приведение меток к типу long
-            labels_enc = crypten.cryptensor(labels_enc_plain)  # Зашифрование меток
+            labels_enc = crypten.cryptensor(labels.to(device), src=0)  # Зашифрование меток
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
