@@ -46,14 +46,15 @@ def train_crypten_model(model, trainloader, device):
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
-            outputs_plain = outputs.get_plain_text()
 
             # Проверка формы выходных данных и меток
+            outputs_plain = outputs.get_plain_text()
             assert outputs_plain.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs_plain.size()}"
             assert labels_enc_plain.size(0) == outputs_plain.size(
                 0), f"Размер меток должен быть [batch_size], но получил {labels_enc_plain.size()}"
 
+            # Переприсвоение для проверки точного размера перед вызовом функции потерь
             loss = criterion(outputs, labels_enc_plain)  # Используем незашифрованные метки
             loss.backward()
             optimizer.step()
