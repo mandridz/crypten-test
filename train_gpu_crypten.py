@@ -1,9 +1,8 @@
 import crypten
 import crypten.nn as cnn
 import crypten.optim as crypten_optim
+import crypten.nn.criterion as crypten_criterion
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 import time
@@ -36,7 +35,7 @@ model_cryp_gpu = model_cryp_gpu.to('cuda')
 
 # Обучение
 def train_crypten_model(model, trainloader, device):
-    criterion = nn.CrossEntropyLoss()
+    criterion = crypten_criterion.CrossEntropyLoss()
     optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
     start_time = time.time()
@@ -48,7 +47,7 @@ def train_crypten_model(model, trainloader, device):
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
-            loss = criterion(outputs.get_plain_text(), labels_enc.get_plain_text())
+            loss = criterion(outputs, labels_enc)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
