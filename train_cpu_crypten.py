@@ -1,8 +1,8 @@
 import crypten
 import crypten.nn as cnn
+import crypten.optim as crypten_optim
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 import time
@@ -28,22 +28,51 @@ class SimpleCrypTenModel(cnn.Module):
 
 model_cryp_cpu = SimpleCrypTenModel()
 
+# Зашифрование модели и перемещение на CPU
+model_cryp_cpu.encrypt()
+model_cryp_cpu = model_cryp_cpu.to('cpu')
+
+# Использование PyTorch CrossEntropyLoss
+criterion = nn.CrossEntropyLoss()
+
 
 # Обучение
 def train_crypten_model(model, trainloader, device):
-    model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
     start_time = time.time()
     for epoch in range(5):
         running_loss = 0.0
         for inputs, labels in trainloader:
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs_enc = crypten.cryptensor(inputs.to(device))
+            labels_plain = labels.to(device).long()
+
             optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
+            outputs = model(inputs_enc)
+
+            # Отладочные выводы размеров и типов
+            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
+            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
+
+            # Убедимся, что метки имеют правильный размер
+            assert outputs.size(
+                1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs.size()}"
+            assert labels_plain.size(0) == outputs.size(
+                0), f"Размер меток должен быть [batch_size], но получил {labels_plain.size()}"
+
+            # Декриптование выходов для использования в PyTorch функции потерь
+            outputs_plain = outputs.get_plain_text()
+
+            # Вычисление потерь
+            loss = criterion(outputs_plain, labels_plain)
+            print(f"Loss: {loss.item()}")
+
+            # Конвертация потерь обратно в зашифрованный тензор
+            loss_enc = crypten.cryptensor(loss.item(), src=0)
+
+            loss_enc.backward()
             optimizer.step()
             running_loss += loss.item()
     end_time = time.time()
@@ -57,12 +86,11 @@ training_time_cryp_cpu = train_crypten_model(model_cryp_cpu, trainloader, 'cpu')
 
 # Инференс
 def inference_model(model, trainloader, device):
-    model.to(device)
     start_time = time.time()
     with torch.no_grad():
         for inputs, labels in trainloader:
-            inputs = inputs.to(device)
-            outputs = model(inputs)
+            inputs_enc = crypten.cryptensor(inputs.to(device))
+            outputs = model(inputs_enc)
     end_time = time.time()
 
     inference_time = end_time - start_time
