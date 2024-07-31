@@ -29,8 +29,9 @@ class SimpleCrypTenModel(cnn.Module):
 
 model_cryp_gpu = SimpleCrypTenModel()
 
-# Зашифрование модели
+# Зашифрование модели и перемещение на GPU
 model_cryp_gpu.encrypt()
+model_cryp_gpu = model_cryp_gpu.to('cuda')
 
 
 # Обучение
