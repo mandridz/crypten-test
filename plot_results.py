@@ -25,8 +25,10 @@ fig, ax = plt.subplots()
 bar_width = 0.2
 opacity = 0.8
 
+bars = []
 for i, label in enumerate(labels):
-    plt.bar(index + i * bar_width, results[label], bar_width, alpha=opacity, label=label)
+    bar = plt.bar(index + i * bar_width, results[label], bar_width, alpha=opacity, label=label)
+    bars.append(bar)
 
 plt.xlabel('Metrics')
 plt.ylabel('Time (seconds)')
@@ -34,13 +36,22 @@ plt.title('Training and Inference Time Comparison')
 plt.xticks(index + bar_width * (len(labels) - 1) / 2, categories)
 plt.legend()
 
+# Добавление значений на барграфы
+for bar in bars:
+    for rect in bar:
+        height = rect.get_height()
+        plt.annotate(f'{height:.2f}',
+                     xy=(rect.get_x() + rect.get_width() / 2, height),
+                     xytext=(0, 3),  # 3 points vertical offset
+                     textcoords='offset points',
+                     ha='center', va='bottom')
+
 plt.tight_layout()
 
 # Сохранение графика в файл
 output_image = 'results_plot.png'
 plt.savefig(output_image)
 plt.close(fig)
-
 
 @app.route('/')
 def index():
@@ -59,11 +70,9 @@ def index():
     </html>
     ''')
 
-
 @app.route('/plot.png')
 def plot_png():
     return send_file(output_image, mimetype='image/png')
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
