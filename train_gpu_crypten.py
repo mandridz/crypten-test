@@ -41,9 +41,12 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs, labels = inputs.to(device), labels.to(device)
+            inputs_enc = crypten.cryptensor(inputs)
+            labels_enc = crypten.cryptensor(labels)
+
             optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            outputs = model(inputs_enc)
+            loss = criterion(outputs.get_plain_text(), labels_enc.get_plain_text())
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -63,4 +66,18 @@ def inference_model(model, trainloader, device):
     with torch.no_grad():
         for inputs, labels in trainloader:
             inputs = inputs.to(device)
+            inputs_enc = crypten.cryptensor(inputs)
+            outputs = model(inputs_enc)
+    end_time = time.time()
 
+    inference_time = end_time - start_time
+    return inference_time
+
+
+inference_time_cryp_gpu = inference_model(model_cryp_gpu, trainloader, 'cuda')
+
+print(f"CrypTen GPU Training time: {training_time_cryp_gpu} seconds")
+print(f"CrypTen GPU Inference time: {inference_time_cryp_gpu} seconds")
+
+with open('results_gpu_crypten.txt', 'w') as f:
+    f.write(f"{training_time_cryp_gpu},{inference_time_cryp_gpu}")
