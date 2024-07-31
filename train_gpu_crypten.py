@@ -1,7 +1,6 @@
 import crypten
 import crypten.nn as cnn
 import crypten.optim as crypten_optim
-import crypten.nn.criterion as crypten_criterion
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -35,7 +34,7 @@ model_cryp_gpu = model_cryp_gpu.to('cuda')
 
 # Обучение
 def train_crypten_model(model, trainloader, device):
-    criterion = crypten_criterion.CrossEntropyLoss()
+    criterion = crypten.nn.CrossEntropyLoss()
     optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
     start_time = time.time()
@@ -43,7 +42,7 @@ def train_crypten_model(model, trainloader, device):
         running_loss = 0.0
         for inputs, labels in trainloader:
             inputs_enc = crypten.cryptensor(inputs.to(device))
-            labels_enc = crypten.cryptensor(labels.to(device))
+            labels_enc = crypten.cryptensor(labels.to(device)).long()  # Cast labels to long
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
