@@ -1,5 +1,6 @@
 import crypten
 import crypten.nn as cnn
+import crypten.optim as crypten_optim
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -33,7 +34,7 @@ model_cryp_gpu = SimpleCrypTenModel()
 def train_crypten_model(model, trainloader, device):
     model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    optimizer = crypten_optim.SGD(model.parameters(), lr=0.01)
 
     start_time = time.time()
     for epoch in range(5):
@@ -62,17 +63,4 @@ def inference_model(model, trainloader, device):
     with torch.no_grad():
         for inputs, labels in trainloader:
             inputs = inputs.to(device)
-            outputs = model(inputs)
-    end_time = time.time()
 
-    inference_time = end_time - start_time
-    return inference_time
-
-
-inference_time_cryp_gpu = inference_model(model_cryp_gpu, trainloader, 'cuda')
-
-print(f"CrypTen GPU Training time: {training_time_cryp_gpu} seconds")
-print(f"CrypTen GPU Inference time: {inference_time_cryp_gpu} seconds")
-
-with open('results_gpu_crypten.txt', 'w') as f:
-    f.write(f"{training_time_cryp_gpu},{inference_time_cryp_gpu}")
