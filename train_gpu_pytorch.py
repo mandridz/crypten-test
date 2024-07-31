@@ -42,10 +42,10 @@ def train_pytorch_model(model, trainloader, device):
             outputs = model(inputs)
 
             # Отладочные выводы размеров и типов
-            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
-            print(f"inputs size: {inputs.size()}, type: {type(inputs)}")
-            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
-            print(f"labels size: {labels.size()}, type: {type(labels)}")
+            # print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            # print(f"inputs size: {inputs.size()}, type: {type(inputs)}")
+            # print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            # print(f"labels size: {labels.size()}, type: {type(labels)}")
 
             # Убедимся, что метки имеют правильный размер
             assert outputs.size(
@@ -55,7 +55,9 @@ def train_pytorch_model(model, trainloader, device):
 
             # Вычисление потерь
             loss = criterion(outputs, labels)
-            print(f"Loss: {loss.item()}")
+
+            # print(f"Loss: {loss.item()}")
+
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
