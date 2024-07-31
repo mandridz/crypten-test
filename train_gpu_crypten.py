@@ -46,8 +46,9 @@ def train_crypten_model(model, trainloader, device):
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
-            # Убедимся, что метки имеют правильный размер
-            outputs_plain = outputs.get_plain_text()  # Декриптование выходных данных для проверки размера
+            outputs_plain = outputs.get_plain_text()
+
+            # Проверка формы выходных данных и меток
             assert outputs_plain.size(
                 1) == 10, f"Размер выходных данных должен быть [batch_size, 10], но получил {outputs_plain.size()}"
             assert labels_enc_plain.size(0) == outputs_plain.size(
