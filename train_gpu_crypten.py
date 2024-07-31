@@ -1,7 +1,8 @@
 import crypten
+import crypten.nn as cnn
+import crypten.optim as crypten_optim
 import torch
 import torch.nn as nn
-import crypten.optim as crypten_optim
 import torchvision
 import torchvision.transforms as transforms
 import time
@@ -15,10 +16,10 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True)
 
 
 # Модель
-class SimpleCrypTenModel(crypten.nn.Module):
+class SimpleCrypTenModel(cnn.Module):
     def __init__(self):
         super(SimpleCrypTenModel, self).__init__()
-        self.linear = crypten.nn.Linear(28 * 28, 10)
+        self.linear = cnn.Linear(28 * 28, 10)
 
     def forward(self, x):
         x = x.view(-1, 28 * 28)
@@ -67,7 +68,11 @@ def train_crypten_model(model, trainloader, device):
             # Вычисление потерь
             loss = criterion(outputs_plain, labels_plain)
             print(f"Loss: {loss.item()}")
-            loss.backward()
+
+            # Конвертация потерь обратно в зашифрованный тензор
+            loss_enc = crypten.cryptensor(loss.item(), src=0)
+
+            loss_enc.backward()
             optimizer.step()
             running_loss += loss.item()
     end_time = time.time()
