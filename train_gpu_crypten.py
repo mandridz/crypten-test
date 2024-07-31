@@ -12,7 +12,7 @@ crypten.init()
 # Загрузка и предобработка данных MNIST
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=4, pin_memory=True)
 
 
 # Модель
@@ -44,17 +44,17 @@ def train_crypten_model(model, trainloader, device):
     for epoch in range(5):
         running_loss = 0.0
         for inputs, labels in trainloader:
-            inputs_enc = crypten.cryptensor(inputs.to(device))
+            inputs_enc = crypten.cryptensor(inputs.to(device), src=0)
             labels_plain = labels.to(device).long()
 
             optimizer.zero_grad()
             outputs = model(inputs_enc)
 
             # Отладочные выводы размеров и типов
-            # print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
-            # print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
-            # print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
-            # print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
+            print(f"Epoch: {epoch}, Batch size: {inputs.size(0)}")
+            print(f"inputs_enc size: {inputs_enc.size()}, type: {type(inputs_enc)}")
+            print(f"outputs size: {outputs.size()}, type: {type(outputs)}")
+            print(f"labels_plain size: {labels_plain.size()}, type: {type(labels_plain)}")
 
             # Убедимся, что метки имеют правильный размер
             assert outputs.size(
@@ -67,8 +67,7 @@ def train_crypten_model(model, trainloader, device):
 
             # Вычисление потерь
             loss = criterion(outputs_plain, labels_plain)
-
-            # print(f"Loss: {loss.item()}")
+            print(f"Loss: {loss.item()}")
 
             # Конвертация потерь обратно в зашифрованный тензор
             loss_enc = crypten.cryptensor(loss.item(), src=0)
